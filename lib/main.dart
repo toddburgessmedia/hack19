@@ -4,8 +4,6 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'stackoverflow_model.dart';
 
-
-
 void main() => runApp(new MyApp());
 
 class MyApp extends StatelessWidget {
@@ -25,7 +23,6 @@ class MyApp extends StatelessWidget {
 class MyHomePage extends StatefulWidget {
   MyHomePage({Key key, this.title}) : super(key: key);
 
-
   final String title;
 
   @override
@@ -34,10 +31,10 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
 
-  List<Item> list;
-  int size = 0;
+  List<Item> list = [];
+  bool loaded = true;
 
-  void _queryStackOverflow() async {
+  Future<List<Item>> _queryStackOverflow() async {
 
     String url = "https://api.stackexchange.com/2.2/search?pagesize=20&order=desc&sort=activity&tagged=flutter&site=stackoverflow";
     http.Response response = await http.get(url);
@@ -45,39 +42,39 @@ class _MyHomePageState extends State<MyHomePage> {
     print(response.statusCode);
     final jsonData = json.decode(response.body);
     var rest = jsonData["items"] as List;
-    print("Hello world");
-    print(rest);
 
-    list = rest.map<Item>((json) => Item.fromJson(json)).toList();
+    return rest.map<Item>((json) => Item.fromJson(json)).toList();
+  }
 
-    setState(() {
-//      list = rest.map<Item>((json) => Item.fromJson(json)).toList();
-    });
-
-
+  Widget StackQuestionsUI(List<Item> newlist) {
+    return new Container(
+      child: new ListView.builder(
+        itemCount: newlist.length,
+        itemBuilder: (context, index) {
+          return new ListTile(
+            title: Text(newlist[index].title),
+            onTap: () {launch(newlist[index].link);},
+          );
+        },
+      ));
   }
 
   @override
   Widget build(BuildContext context) {
-
-    if (list == null) {
-      _queryStackOverflow();
-    }
-    print("hello");
-
-    return new Scaffold(
+    return new MaterialApp(
+        home: new Scaffold(
         appBar: new AppBar(
           title: new Text(widget.title),
         ),
-        body:
-        ListView.builder(
-          itemCount: list.length,
-          itemBuilder: (context, index) {
-            return ListTile(
-              title: Text(list[index].title),
-              onTap: () {launch(list[index].link);} ,
-            );
-          },
-        ));
+        body: new FutureBuilder<List<Item>>(
+              future: _queryStackOverflow(),
+              builder: (context,snapshot) {
+                return snapshot.hasData
+                    ? StackQuestionsUI(snapshot.data)
+                    : new Center(child: CircularProgressIndicator());
+              }
+        )
+        ),
+    );
   }
 }
