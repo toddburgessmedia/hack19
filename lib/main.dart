@@ -51,12 +51,15 @@ class _MyHomePageState extends State<MyHomePage> {
       child: new ListView.builder(
         itemCount: newlist.length,
         itemBuilder: (context, index) {
-          return new ListTile(
-            title: Text(newlist[index].title),
-            onTap: () {launch(newlist[index].link);},
-          );
-        },
-      ));
+          return Container(
+              color: (index %2 == 0) ? Colors.blueGrey[100] : Colors.white,
+              child: ListTile(
+                title: Text(newlist[index].title),
+                onTap: () {launch(newlist[index].link);},
+              ),
+            );
+          },
+        ));
   }
 
   @override
